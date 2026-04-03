@@ -8,6 +8,7 @@ import { useEditorialEngine } from '@/hooks/useEditorialEngine';
 export function App() {
   const {
     intake,
+    intakeHints,
     patchIntake,
     saveDraft,
     analyzeStory,
@@ -15,12 +16,14 @@ export function App() {
     groupedTags,
     selectedTags,
     toggleTag,
+    clearTagsByCategory,
     decision,
     setDecision,
     saveDecision,
     evidence,
     message,
     saving,
+    triggerPop,
   } = useEditorialEngine();
 
   return (
@@ -29,13 +32,14 @@ export function App() {
       left={
         <IntakePanel
           values={intake}
+          hints={intakeHints}
           disabled={saving}
           onChange={patchIntake}
           onAnalyze={analyzeStory}
           onSaveDraft={saveDraft}
         />
       }
-      center={<AnalysisPanel analysis={analysis} />}
+      center={<AnalysisPanel analysis={analysis} onTriggerPop={triggerPop} />}
       right={
         <DecisionPanel
           decision={decision}
@@ -45,8 +49,10 @@ export function App() {
           tagGroups={groupedTags}
           selectedTagIds={selectedTags}
           onTagToggle={toggleTag}
+          onClearCategory={clearTagsByCategory}
           evidence={evidence}
           outputs={analysis?.recommended_outputs ?? mockAnalysis.recommended_outputs}
+          onTriggerPop={triggerPop}
         />
       }
     />

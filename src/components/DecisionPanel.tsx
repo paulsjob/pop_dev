@@ -11,8 +11,10 @@ interface DecisionPanelProps {
   tagGroups: { category: { id: string; name: string }; tags: { id: string; label: string; category_id: string }[] }[];
   selectedTagIds: string[];
   onTagToggle: (tagId: string) => void;
+  onClearCategory: (categoryId: string) => void;
   evidence: EvidenceItem[];
   outputs: OutputRecommendation[];
+  onTriggerPop: (triggerKey: string) => void;
 }
 
 export function DecisionPanel({
@@ -23,8 +25,10 @@ export function DecisionPanel({
   tagGroups,
   selectedTagIds,
   onTagToggle,
+  onClearCategory,
   evidence,
   outputs,
+  onTriggerPop,
 }: DecisionPanelProps) {
   function patch(field: keyof StoryDecision, value: string) {
     onDecisionChange({ ...decision, [field]: value });
@@ -36,7 +40,12 @@ export function DecisionPanel({
 
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Tags</h3>
-        <TagEditor groups={tagGroups} selectedTagIds={selectedTagIds} onToggle={onTagToggle} />
+        <TagEditor
+          groups={tagGroups}
+          selectedTagIds={selectedTagIds}
+          onToggle={onTagToggle}
+          onClearCategory={onClearCategory}
+        />
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -94,7 +103,7 @@ export function DecisionPanel({
 
       <div>
         <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Output recommendations</h3>
-        <OutputRecommendations items={outputs} />
+        <OutputRecommendations items={outputs} onTrigger={onTriggerPop} />
       </div>
 
       <button
