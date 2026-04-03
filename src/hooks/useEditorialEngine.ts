@@ -20,6 +20,13 @@ interface IntakeFormState {
   submission_notes: string;
 }
 
+interface IntakeHints {
+  detectedType: 'url' | 'text' | 'transcript' | null;
+  detectedSourceName?: string;
+  detectedTitle?: string;
+  appliedFields: string[];
+}
+
 const initialIntake: IntakeFormState = {
   pasted_input: '',
   source_type: 'url',
@@ -30,8 +37,81 @@ const initialIntake: IntakeFormState = {
   submission_notes: '',
 };
 
+const initialHints: IntakeHints = {
+  detectedType: null,
+  appliedFields: [],
+};
+
+function titleFromHostname(hostname: string) {
+  return hostname
+    .replace(/^www\./, '')
+    .split('.')
+    .slice(0, -1)
+    .join(' ')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (match) => match.toUpperCase());
+}
+
+function detectTitleFromText(input: string) {
+  const sourceLine = input
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => /^(title|headline)\s*:/i.test(line));
+
+  if (sourceLine) {
+    return sourceLine.split(':').slice(1).join(':').trim();
+  }
+
+  const markdownHeading = input
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => /^#{1,2}\s+/.test(line));
+
+  if (markdownHeading) {
+    return markdownHeading.replace(/^#{1,2}\s+/, '').trim();
+  }
+
+  return undefined;
+}
+
+function deriveMagicFields(input: string) {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      detectedType: null,
+      detectedSourceName: undefined,
+      detectedTitle: undefined,
+      suggestedRawText: undefined,
+    };
+  }
+
+  const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+  if (urlMatch) {
+    try {
+      const parsed = new URL(urlMatch[0]);
+      return {
+        detectedType: 'url' as const,
+        detectedSourceName: titleFromHostname(parsed.hostname),
+        detectedTitle: detectTitleFromText(trimmed),
+        suggestedRawText: trimmed.length > urlMatch[0].length + 30 ? trimmed : undefined,
+      };
+    } catch {
+      // fall through to text detection
+    }
+  }
+
+  const isTranscript = /\b\d{1,2}:\d{2}(?::\d{2})?\b/.test(trimmed) && /\n/.test(trimmed);
+  return {
+    detectedType: isTranscript ? ('transcript' as const) : ('text' as const),
+    detectedSourceName: undefined,
+    detectedTitle: detectTitleFromText(trimmed),
+    suggestedRawText: trimmed,
+  };
+}
+
 export function useEditorialEngine() {
   const [intake, setIntake] = useState<IntakeFormState>(initialIntake);
+  const [intakeHints, setIntakeHints] = useState<IntakeHints>(initialHints);
   const [analysis, setAnalysis] = useState<StoryAnalysis | null>(null);
   const [categories, setCategories] = useState<TagCategory[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -68,15 +148,70 @@ export function useEditorialEngine() {
     [categories, tags],
   );
 
+  function applyPastedInputMagic(input: string) {
+    const detected = deriveMagicFields(input);
+    if (!detected.detectedType) {
+      setIntakeHints(initialHints);
+      return;
+    }
+
+    const appliedFields: string[] = [];
+    setIntake((prev) => {
+      const next = { ...prev };
+
+      if (prev.source_type !== detected.detectedType) {
+        next.source_type = detected.detectedType;
+        appliedFields.push('source type');
+      }
+
+      if (!prev.source_name && detected.detectedSourceName) {
+        next.source_name = detected.detectedSourceName;
+        appliedFields.push('source name');
+      }
+
+      if (!prev.title && detected.detectedTitle) {
+        next.title = detected.detectedTitle;
+        appliedFields.push('title');
+      }
+
+      if (!prev.raw_text && detected.suggestedRawText && detected.detectedType !== 'url') {
+        next.raw_text = detected.suggestedRawText;
+        appliedFields.push('raw text');
+      }
+
+      return next;
+    });
+
+    setIntakeHints({
+      detectedType: detected.detectedType,
+      detectedSourceName: detected.detectedSourceName,
+      detectedTitle: detected.detectedTitle,
+      appliedFields,
+    });
+  }
+
   function patchIntake(key: keyof IntakeFormState, value: string) {
     setIntake((prev) => ({
       ...prev,
       [key]: key === 'urgency' ? (value as Urgency) : value,
     }));
+
+    if (key === 'pasted_input') {
+      applyPastedInputMagic(value);
+    }
   }
 
   function toggleTag(tagId: string) {
     setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
+  }
+
+  function clearTagsByCategory(categoryId: string) {
+    const categoryTagIds = tags.filter((tag) => tag.category_id === categoryId).map((tag) => tag.id);
+    setSelectedTags((prev) => prev.filter((tagId) => !categoryTagIds.includes(tagId)));
+  }
+
+  function triggerPop(key: string) {
+    setMessage(`Mock POP trigger fired for ${key}.`);
   }
 
   async function saveDraft() {
@@ -144,10 +279,7 @@ export function useEditorialEngine() {
 
     setSaving(true);
     try {
-      await Promise.all([
-        saveStoryDecision({ ...decision, story_id: storyId }),
-        saveStoryTags(storyId, selectedTags),
-      ]);
+      await Promise.all([saveStoryDecision({ ...decision, story_id: storyId }), saveStoryTags(storyId, selectedTags)]);
       setMessage('Decision and tags saved.');
     } catch {
       setMessage('Could not save decision/tags. Using local-only mode if Supabase is unavailable.');
@@ -158,6 +290,7 @@ export function useEditorialEngine() {
 
   return {
     intake,
+    intakeHints,
     patchIntake,
     saveDraft,
     analyzeStory,
@@ -165,6 +298,7 @@ export function useEditorialEngine() {
     groupedTags,
     selectedTags,
     toggleTag,
+    clearTagsByCategory,
     decision,
     setDecision,
     saveDecision,
@@ -172,5 +306,6 @@ export function useEditorialEngine() {
     message,
     saving,
     storyId,
+    triggerPop,
   };
 }

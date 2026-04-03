@@ -10,25 +10,41 @@ interface IntakePanelProps {
     urgency: Urgency;
     submission_notes: string;
   };
+  hints: {
+    detectedType: 'url' | 'text' | 'transcript' | null;
+    detectedSourceName?: string;
+    detectedTitle?: string;
+    appliedFields: string[];
+  };
   disabled: boolean;
   onChange: (field: keyof IntakePanelProps['values'], value: string) => void;
   onAnalyze: () => void;
   onSaveDraft: () => void;
 }
 
-export function IntakePanel({ values, disabled, onChange, onAnalyze, onSaveDraft }: IntakePanelProps) {
+export function IntakePanel({ values, hints, disabled, onChange, onAnalyze, onSaveDraft }: IntakePanelProps) {
   return (
     <div className="panel space-y-4">
       <h2 className="section-title">Intake</h2>
 
-      <div>
-        <label className="label">Paste URL or text first</label>
-        <input
-          className="input"
-          placeholder="https://... or quick pasted excerpt"
+      <div className="rounded-md border border-sky-700/40 bg-sky-900/10 p-3">
+        <label className="label">Paste URL, article, or transcript</label>
+        <textarea
+          className="input min-h-24"
+          placeholder="Drop anything here and fields auto-fill as patterns are detected..."
           value={values.pasted_input}
           onChange={(event) => onChange('pasted_input', event.target.value)}
         />
+        <div className="mt-2 flex flex-wrap gap-2 text-xs">
+          {hints.detectedType && <span className="rounded bg-slate-800 px-2 py-1 text-slate-200">Detected: {hints.detectedType}</span>}
+          {hints.detectedSourceName && (
+            <span className="rounded bg-slate-800 px-2 py-1 text-slate-200">Source: {hints.detectedSourceName}</span>
+          )}
+          {hints.detectedTitle && <span className="rounded bg-slate-800 px-2 py-1 text-slate-200">Title found</span>}
+          {hints.appliedFields.length > 0 && (
+            <span className="rounded bg-emerald-900/40 px-2 py-1 text-emerald-200">Auto-filled: {hints.appliedFields.join(', ')}</span>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -68,7 +84,7 @@ export function IntakePanel({ values, disabled, onChange, onAnalyze, onSaveDraft
       <div>
         <label className="label">Raw text</label>
         <textarea
-          className="input min-h-36"
+          className="input min-h-28"
           value={values.raw_text}
           onChange={(event) => onChange('raw_text', event.target.value)}
         />
@@ -77,7 +93,7 @@ export function IntakePanel({ values, disabled, onChange, onAnalyze, onSaveDraft
       <div>
         <label className="label">Submission notes</label>
         <textarea
-          className="input min-h-24"
+          className="input min-h-20"
           value={values.submission_notes}
           onChange={(event) => onChange('submission_notes', event.target.value)}
         />
