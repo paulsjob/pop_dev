@@ -1,0 +1,21 @@
+GUARDRAILS CONFIG:
+
+tone: clear, calm, authoritative
+audience_focus: broad, working-families
+priority_issues:
+- cost-of-living
+- healthcare
+- democracy
+- corporate-accountability
+
+framing_rules:
+- prioritize real-world impact over political process
+- emphasize who is affected and how
+- avoid jargon and insider language
+
+avoid:
+- speculation
+- unverified claims
+- excessive outrage framing
+
+require_evidence: true

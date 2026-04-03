@@ -1,0 +1,9 @@
+{
+  "source_type": "article",
+  "source_name": "cnn",
+  "source_url": "https://example.com/story",
+  "headline": "example headline",
+  "raw_text": "cleaned article text or transcript",
+  "submitted_notes": "optional context",
+  "urgency": "today"
+}

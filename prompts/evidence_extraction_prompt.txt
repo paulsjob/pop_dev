@@ -1,0 +1,10 @@
+TASK:
+Extract verifiable evidence from the provided story.
+
+Rules:
+- only include content directly present in source
+- do not paraphrase quotes
+- keep claims factual, not interpretive
+- no hallucination
+
+Return JSON using the schema in `schemas/evidence_output.schema.json`.

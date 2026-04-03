@@ -1,0 +1,10 @@
+TASK:
+Normalize and validate the following tags against system standards.
+
+Rules:
+- enforce lowercase-hyphen format
+- remove duplicates
+- map similar tags to canonical forms
+- ensure correct category placement
+
+Return cleaned tags only.

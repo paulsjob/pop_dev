@@ -1,0 +1,71 @@
+INPUT STORY:
+source_type: {{article | x-post | youtube | podcast | etc}}
+source_name: {{cnn, x, youtube, etc}}
+source_url: {{url}}
+headline: {{headline}}
+raw_text: {{cleaned text or transcript}}
+submitted_notes: {{optional}}
+urgency: {{breaking | today | this-week | evergreen}}
+
+TASK:
+Analyze the provided story and produce a structured editorial evaluation.
+
+Rules:
+1) SUMMARY
+- summary_short = one sentence, plain language
+- summary_long = 2-3 sentences, no fluff
+
+2) WHY IT MATTERS
+- practical = real-world impact on people
+- political = implications for power, policy, or parties
+- audience = why a general audience should care
+
+3) ENTITIES
+- include people, organizations, institutions
+- use lowercase hyphenated format
+
+4) TAGGING
+- topic_tags: 2-5 tags max
+- audience_tags: 1-3 tags
+- format_tags: fit examples like explainer, reaction, short-friendly, youtube-friendly, quote-graphic
+- narrative_tags: messaging role like accountability, corporate-power, kitchen-table, contrast, corruption
+- time_tags: breaking, timely, evergreen, event-tied
+- geography_tags: national, state, district if relevant
+- cluster_tags: broader content series grouping when relevant
+
+5) SCORING (0-5)
+- urgency
+- clarity
+- resonance
+- emotional_charge
+- youtube_potential
+- social_potential
+- strategic_fit
+- overall_score = 0-100 weighted composite
+
+6) ANGLES
+Provide 3 distinct angles:
+- explanatory
+- accountability or contrast
+- emotionally resonant
+
+7) OUTPUTS
+Suggest content formats with triggers, e.g.:
+- youtube-explainer -> create_youtube_script
+- short-vertical -> create_short_script
+- quote-graphic -> create_pop_quote
+- thread -> create_thread
+
+8) RISKS
+List concerns: unclear facts, weak sourcing, low audience relevance, reputational risk
+
+9) FINAL RECOMMENDATION
+Choose one: must-act | strong | test | monitor | pass
+Base decision on scores + guardrails alignment.
+
+IMPORTANT:
+- be decisive
+- avoid generic language
+- optimize for downstream automation
+
+Return JSON using the schema in `schemas/editorial_output.schema.json`.
