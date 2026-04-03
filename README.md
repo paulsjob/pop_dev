@@ -50,3 +50,12 @@ Only key paths are wired in this first version (story creation, primary story so
 - Analyze Story: creates story/source and runs mocked analysis.
 - Decision panel: edit tags, decision metadata, and save.
 - Analysis/evidence/output recommendations are visible in the center/right columns.
+
+## Prompting Codex to generate `package.json`
+Use this prompt when you want Codex to scaffold or refresh the Node manifest based on the current codebase:
+
+```text
+Generate a standard package.json file for this Node.js project. Include any dependencies required by the code written so far, and include common scripts for development, build, test, and lint when applicable.
+```
+
+Tip: run this from the repository root so Codex can inspect imports and choose the right dependencies.
