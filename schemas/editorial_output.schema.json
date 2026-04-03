@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EditorialEvaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "summary_short",
+    "summary_long",
+    "why_it_matters",
+    "key_entities",
+    "topic_tags",
+    "audience_tags",
+    "format_tags",
+    "narrative_tags",
+    "time_tags",
+    "geography_tags",
+    "cluster_tags",
+    "editorial_scores",
+    "recommended_angles",
+    "recommended_outputs",
+    "risks",
+    "final_recommendation"
+  ],
+  "properties": {
+    "summary_short": { "type": ["string", "null"] },
+    "summary_long": { "type": ["string", "null"] },
+    "why_it_matters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["practical", "political", "audience"],
+      "properties": {
+        "practical": { "type": ["string", "null"] },
+        "political": { "type": ["string", "null"] },
+        "audience": { "type": ["string", "null"] }
+      }
+    },
+    "key_entities": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+      "uniqueItems": true
+    },
+    "topic_tags": { "$ref": "#/$defs/tags" },
+    "audience_tags": { "$ref": "#/$defs/tags" },
+    "format_tags": { "$ref": "#/$defs/tags" },
+    "narrative_tags": { "$ref": "#/$defs/tags" },
+    "time_tags": { "$ref": "#/$defs/tags" },
+    "geography_tags": { "$ref": "#/$defs/tags" },
+    "cluster_tags": { "$ref": "#/$defs/tags" },
+    "editorial_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "urgency",
+        "clarity",
+        "resonance",
+        "emotional_charge",
+        "youtube_potential",
+        "social_potential",
+        "strategic_fit",
+        "overall_score"
+      ],
+      "properties": {
+        "urgency": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "clarity": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "resonance": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "emotional_charge": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "youtube_potential": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "social_potential": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "strategic_fit": { "type": "integer", "minimum": 0, "maximum": 5 },
+        "overall_score": { "type": "integer", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "recommended_angles": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string" }
+    },
+    "recommended_outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "confidence", "trigger"],
+        "properties": {
+          "type": { "type": "string" },
+          "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "trigger": { "type": "string" }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "final_recommendation": {
+      "type": "string",
+      "enum": ["must-act", "strong", "test", "monitor", "pass"]
+    }
+  },
+  "$defs": {
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    }
+  }
+}

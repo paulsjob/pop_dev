@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvidenceExtraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_metadata",
+    "key_quotes",
+    "key_claims",
+    "supporting_facts",
+    "transcript_segments"
+  ],
+  "properties": {
+    "source_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["author", "published_at", "source_name"],
+      "properties": {
+        "author": { "type": ["string", "null"] },
+        "published_at": { "type": ["string", "null"] },
+        "source_name": { "type": ["string", "null"] }
+      }
+    },
+    "key_quotes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "key_claims": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "supporting_facts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "transcript_segments": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
