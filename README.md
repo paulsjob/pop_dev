@@ -1,19 +1,52 @@
-# POP Editorial Prompt Architecture
+# MD Editorial Engine MVP (Local)
 
-This repository contains a production-ready 3-layer prompt architecture for structured political editorial analysis.
+Internal leadership console prototype for story intake, structured analysis review, tag editing, evidence review, and final editorial decision logging.
 
-## Components
-- `prompts/system_prompt.txt`: static identity and behavior contract.
-- `prompts/guardrails_config.txt`: dynamic guardrails injection template.
-- `prompts/main_engine_prompt.txt`: core task prompt for editorial evaluation.
-- `prompts/evidence_extraction_prompt.txt`: separate evidence extraction pass.
-- `prompts/tag_normalization_prompt.txt`: optional tag cleanup pass.
-- `schemas/editorial_output.schema.json`: strict JSON schema for editorial outputs.
-- `schemas/evidence_output.schema.json`: strict JSON schema for evidence outputs.
+## Stack
+- React + TypeScript + Vite
+- Tailwind CSS
+- Supabase JS client (`@supabase/supabase-js`)
 
-## Recommended Pipeline
-1. User submits story input.
-2. Run main engine prompt and validate against editorial schema.
-3. Run evidence extraction prompt and validate against evidence schema.
-4. Optionally run tag normalization.
-5. Persist outputs for retrieval and automation.
+## Quick start
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Copy env template:
+   ```bash
+   cp .env.example .env
+   ```
+3. Add env vars in `.env` (if using Supabase):
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+4. Start local dev server:
+   ```bash
+   npm run dev
+   ```
+
+## Supabase behavior
+- If `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` are set, the app attempts live reads/writes.
+- If they are absent, the app runs in local mock mode for analysis, evidence, and tags.
+
+## MVP tables targeted
+The data layer is intentionally pragmatic for MVP and expects these tables:
+- `organizations`
+- `profiles`
+- `organization_members`
+- `stories`
+- `story_sources`
+- `story_analysis_runs`
+- `tag_categories`
+- `tags`
+- `story_tags`
+- `story_decisions`
+- `evidence_items`
+- `output_recommendations`
+
+Only key paths are wired in this first version (story creation, primary story source creation, tags load/save, decision save, evidence load).
+
+## Current workflow
+- Intake panel: paste URL/text first, then optional assistive metadata.
+- Analyze Story: creates story/source and runs mocked analysis.
+- Decision panel: edit tags, decision metadata, and save.
+- Analysis/evidence/output recommendations are visible in the center/right columns.
