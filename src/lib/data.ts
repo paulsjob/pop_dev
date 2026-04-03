@@ -1,4 +1,4 @@
-import { mockAnalysis, mockEvidence, mockTagCategories, mockTags } from '@/mocks/mockAnalysis';
+import { mockEvidence, mockTagCategories, mockTags } from '@/mocks/mockAnalysis';
 import {
   EvidenceItem,
   Story,
@@ -8,6 +8,8 @@ import {
   Tag,
   TagCategory,
 } from '@/types/entities';
+import { AnalysisRequest } from '@/types/editorialEngine';
+import { requestAnalysis } from './analysisService';
 import { hasSupabaseConfig, supabase } from './supabase';
 
 export async function createStory(payload: Omit<Story, 'id'>): Promise<Story> {
@@ -45,8 +47,9 @@ export async function loadTags(): Promise<{ categories: TagCategory[]; tags: Tag
   return { categories: (categories ?? []) as TagCategory[], tags: (tags ?? []) as Tag[] };
 }
 
-export async function runAnalysis(_storyId: string): Promise<StoryAnalysis> {
-  return mockAnalysis;
+export async function runAnalysis(payload: AnalysisRequest): Promise<StoryAnalysis> {
+  const result = await requestAnalysis(payload);
+  return result.analysis;
 }
 
 export async function saveStoryDecision(payload: StoryDecision): Promise<StoryDecision> {

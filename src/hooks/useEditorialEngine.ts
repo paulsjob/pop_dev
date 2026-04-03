@@ -9,6 +9,7 @@ import {
   saveStoryTags,
 } from '@/lib/data';
 import { EvidenceItem, StoryAnalysis, StoryDecision, Tag, TagCategory, Urgency } from '@/types/entities';
+import { AnalysisMode } from '@/types/editorialEngine';
 
 interface IntakeFormState {
   pasted_input: string;
@@ -41,6 +42,9 @@ const initialHints: IntakeHints = {
   detectedType: null,
   appliedFields: [],
 };
+
+const defaultAnalysisMode = (import.meta.env.VITE_ANALYSIS_MODE as AnalysisMode | undefined) ?? 'auto';
+
 
 function titleFromHostname(hostname: string) {
   return hostname
@@ -260,7 +264,21 @@ export function useEditorialEngine() {
         raw_text: intake.raw_text || intake.pasted_input,
       });
 
-      const [result, evidenceItems] = await Promise.all([runAnalysis(activeStoryId), loadEvidence(activeStoryId)]);
+      const [result, evidenceItems] = await Promise.all([
+        runAnalysis({
+          story_id: activeStoryId,
+          mode: defaultAnalysisMode,
+          input: {
+            title: intake.title || 'Untitled Story',
+            raw_text: intake.raw_text || intake.pasted_input,
+            source_type: intake.source_type,
+            source_name: intake.source_name || undefined,
+            urgency: intake.urgency,
+            submission_notes: intake.submission_notes || undefined,
+          },
+        }),
+        loadEvidence(activeStoryId),
+      ]);
       setAnalysis(result);
       setEvidence(evidenceItems);
       setMessage('Analysis completed. Review results and finalize decision.');
