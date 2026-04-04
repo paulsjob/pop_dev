@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StoryInputScreen } from '@/components/daily/StoryInputScreen';
 import { ProcessingScreen } from '@/components/daily/ProcessingScreen';
 import { ResultsScreen } from '@/components/daily/ResultsScreen';
+import { ExtractionReviewScreen } from '@/components/daily/ExtractionReviewScreen';
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { loadEvidence, loadTags, runAnalysis, createStory, createStorySource, saveStoryDecision } from '@/lib/data';
 import { mockEvidence } from '@/mocks/mockAnalysis';
@@ -17,10 +18,28 @@ const processingStages = [
 ];
 
 type RouteMode = 'daily' | 'settings';
-type FlowState = 'input' | 'processing' | 'results';
+type FlowState = 'input' | 'correction' | 'processing' | 'results';
+
+interface InferredStoryInput {
+  sourceType: string;
+  sourceName: string;
+  headline: string;
+  rawText: string;
+  url: string | null;
+  confidence: number;
+}
 
 function getRouteMode(): RouteMode {
   return window.location.pathname.startsWith('/settings') ? 'settings' : 'daily';
+}
+
+function normalizeSourceName(hostname: string) {
+  const base = hostname.replace(/^www\./i, '').split('.').filter(Boolean)[0] ?? hostname;
+  return base
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function detectSourceType(text: string) {
@@ -49,6 +68,46 @@ function inferHeadline(text: string) {
   return first?.slice(0, 88) ?? 'Untitled Story';
 }
 
+function inferStoryInput(text: string): InferredStoryInput {
+  const trimmed = text.trim();
+  const sourceType = detectSourceType(trimmed);
+  const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+  const url = urlMatch?.[0] ?? null;
+
+  let sourceName = sourceType === 'url' ? 'External Source' : 'Pasted Input';
+
+  if (url) {
+    try {
+      const hostname = new URL(url).hostname;
+      sourceName = normalizeSourceName(hostname) || 'External Source';
+    } catch {
+      sourceName = 'External Source';
+    }
+  } else if (/^subject:/im.test(trimmed)) {
+    sourceName = 'Email Submission';
+  } else if (sourceType === 'transcript') {
+    sourceName = 'Transcript Input';
+  }
+
+  const headline = inferHeadline(trimmed);
+
+  let confidence = 0.45;
+  if (url) confidence += 0.35;
+  if (trimmed.length > 300) confidence += 0.2;
+  if (/^#{1,2}\s+/m.test(trimmed) || /[.!?]\s/.test(trimmed)) confidence += 0.12;
+  if (trimmed.length < 60) confidence -= 0.25;
+  if (headline === 'Untitled Story') confidence -= 0.15;
+
+  return {
+    sourceType,
+    sourceName,
+    headline,
+    rawText: trimmed,
+    url,
+    confidence: Math.max(0, Math.min(confidence, 0.99)),
+  };
+}
+
 export function App() {
   const [route, setRoute] = useState<RouteMode>(getRouteMode);
   const [flow, setFlow] = useState<FlowState>('input');
@@ -59,6 +118,8 @@ export function App() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [tagCategories, setTagCategories] = useState<TagCategory[]>([]);
   const [storyId, setStoryId] = useState<string | null>(null);
+  const [pendingInference, setPendingInference] = useState<InferredStoryInput | null>(null);
+  const [finalInference, setFinalInference] = useState<InferredStoryInput | null>(null);
 
   useEffect(() => {
     const onPop = () => setRoute(getRouteMode());
@@ -100,17 +161,15 @@ export function App() {
     setRoute(mode);
   }
 
-  async function handleAnalyzeStory() {
-    if (!pastedInput.trim()) return;
-
+  async function runStoryAnalysis(inferred: InferredStoryInput) {
     setFlow('processing');
+    setFinalInference(inferred);
 
     try {
-      const title = inferHeadline(pastedInput);
       const story = await createStory({
-        title,
-        raw_text: pastedInput,
-        source_name: sourceType === 'url' ? 'External Source' : 'Pasted Input',
+        title: inferred.headline,
+        raw_text: inferred.rawText,
+        source_name: inferred.sourceName,
         urgency: 'medium',
         notes: 'Generated from single-input analyzer flow.',
       });
@@ -119,10 +178,10 @@ export function App() {
 
       await createStorySource({
         story_id: story.id,
-        source_type: sourceType,
-        source_name: story.source_name,
-        url: sourceType === 'url' ? pastedInput : null,
-        raw_text: pastedInput,
+        source_type: inferred.sourceType,
+        source_name: inferred.sourceName,
+        url: inferred.url,
+        raw_text: inferred.rawText,
       });
 
       const [analysisResult, evidenceResult] = await Promise.all([
@@ -130,10 +189,10 @@ export function App() {
           story_id: story.id,
           mode: 'auto',
           input: {
-            title,
-            raw_text: pastedInput,
-            source_type: sourceType,
-            source_name: story.source_name ?? undefined,
+            title: inferred.headline,
+            raw_text: inferred.rawText,
+            source_type: inferred.sourceType,
+            source_name: inferred.sourceName,
             urgency: 'medium',
           },
         }),
@@ -145,8 +204,23 @@ export function App() {
       setProcessingIndex(processingStages.length - 1);
       setFlow('results');
     } catch {
+      setFinalInference(null);
       setFlow('input');
     }
+  }
+
+  async function handleAnalyzeStory() {
+    if (!pastedInput.trim()) return;
+
+    const inferred = inferStoryInput(pastedInput);
+
+    if (inferred.confidence < 0.72) {
+      setPendingInference(inferred);
+      setFlow('correction');
+      return;
+    }
+
+    await runStoryAnalysis(inferred);
   }
 
   async function handleDecision(action: 'approve' | 'edit' | 'pass') {
@@ -183,6 +257,21 @@ export function App() {
         />
       )}
 
+      {flow === 'correction' && pendingInference && (
+        <ExtractionReviewScreen
+          inference={pendingInference}
+          onBack={() => {
+            setFlow('input');
+            setPendingInference(null);
+          }}
+          onUpdate={(next) => setPendingInference(next)}
+          onContinue={async () => {
+            await runStoryAnalysis(pendingInference);
+            setPendingInference(null);
+          }}
+        />
+      )}
+
       {flow === 'processing' && (
         <ProcessingScreen
           steps={processingStages}
@@ -192,8 +281,8 @@ export function App() {
 
       {flow === 'results' && analysis && (
         <ResultsScreen
-          sourceType={sourceType}
-          headline={inferHeadline(pastedInput)}
+          sourceType={finalInference?.sourceType ?? sourceType}
+          headline={finalInference?.headline ?? inferHeadline(pastedInput)}
           analysis={analysis}
           suggestedTags={suggestedTags}
           evidence={evidence}
@@ -206,6 +295,8 @@ export function App() {
             setFlow('input');
             setPastedInput('');
             setStoryId(null);
+            setPendingInference(null);
+            setFinalInference(null);
           }}
         />
       )}
