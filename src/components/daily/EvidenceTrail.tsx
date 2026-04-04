@@ -6,11 +6,11 @@ interface EvidenceTrailProps {
 
 export function EvidenceTrail({ evidence }: EvidenceTrailProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {evidence.map((item) => (
-        <article key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="text-base text-slate-800">{item.title}</h4>
-          <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.excerpt}</p>
+        <article key={item.id} className="rounded-2xl border border-stone-200/80 bg-stone-50/60 p-4">
+          <h4 className="text-[0.98rem] font-medium text-stone-800">{item.title}</h4>
+          <p className="mt-1.5 text-sm leading-7 text-stone-600">{item.excerpt}</p>
         </article>
       ))}
     </div>
