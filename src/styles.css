@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Inter', 'SF Pro Text', 'Avenir Next', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'Noto Sans Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  background: #fcfcfa;
+  background: #f8f8f5;
   color: #1f2937;
 }
 
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #fdfcf9 0%, #f8f8f5 38%, #f5f4f1 100%);
+  background: radial-gradient(circle at top, #fdfdfb 0%, #f8f8f5 45%, #f2f2ef 100%);
   color: #1f2937;
 }
 
