@@ -173,7 +173,7 @@ export function App() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 px-6 py-10 text-slate-800">
+    <main className="min-h-screen px-6 py-10 text-stone-800">
       {flow === 'input' && (
         <StoryInputScreen
           value={pastedInput}

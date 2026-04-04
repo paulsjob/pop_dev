@@ -33,7 +33,7 @@ export function ResultsScreen({
   const confidence = Math.max(...analysis.recommended_outputs.map((output) => output.confidence), 0.72);
 
   return (
-    <section className="mx-auto w-full max-w-4xl space-y-5 pb-12">
+    <section className="mx-auto w-full max-w-4xl space-y-6 pb-14">
       <ResultsHeader
         headline={headline}
         sourceType={sourceType}
@@ -65,23 +65,29 @@ export function ResultsScreen({
         <EvidenceTrail evidence={evidence} />
       </RecommendationCard>
 
-      <div className="flex flex-wrap gap-3 pt-2">
-        <button onClick={onApprove} className="rounded-full bg-slate-800 px-5 py-2.5 text-white hover:bg-slate-700">
+      <div className="flex flex-wrap items-center gap-2.5 pt-4">
+        <button onClick={onApprove} className="rounded-full bg-stone-800 px-5 py-2.5 text-sm font-medium text-stone-50 transition hover:bg-stone-700">
           Approve
         </button>
-        <button onClick={onEdit} className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-slate-700 hover:border-slate-400">
+        <button
+          onClick={onEdit}
+          className="rounded-full border border-stone-300 bg-white/95 px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:border-stone-400"
+        >
           Edit
         </button>
-        <button onClick={onPass} className="rounded-full border border-slate-300 bg-white px-5 py-2.5 text-slate-700 hover:border-slate-400">
+        <button
+          onClick={onPass}
+          className="rounded-full border border-stone-300 bg-white/95 px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:border-stone-400"
+        >
           Pass
         </button>
         <button
           onClick={() => onGeneratePop('manual_pop_generation')}
-          className="rounded-full border border-sky-200 bg-sky-50 px-5 py-2.5 text-sky-700 hover:bg-sky-100"
+          className="rounded-full border border-teal-200 bg-teal-50/90 px-5 py-2.5 text-sm font-medium text-teal-800 transition hover:bg-teal-100"
         >
           Generate POP
         </button>
-        <button onClick={onAnalyzeAnother} className="rounded-full px-4 py-2.5 text-slate-500 hover:text-slate-700">
+        <button onClick={onAnalyzeAnother} className="rounded-full px-4 py-2.5 text-sm text-stone-500 transition hover:text-stone-700">
           Analyze another
         </button>
       </div>
